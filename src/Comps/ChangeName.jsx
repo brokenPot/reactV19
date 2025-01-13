@@ -1,43 +1,47 @@
-import { useActionState } from "react";
-
-// useOptimistic, use
+import { useActionState, useOptimistic } from "react";
 
 /* eslint-disable react/prop-types */
 export function ChangeName({ name, setName }) {
+    // 낙관적 업데이트 상태 정의
+    const [optimisticName, setOptimisticName] = useOptimistic(
+        { name },
+        (state, newName) => ({ ...state, name: newName })
+    );
+
     const [error, submitAction, isPending] = useActionState(
         async (previousState, formData) => {
             const newName = formData.get("name");
 
             // 지연 추가 (2초)
-            await new Promise((resolve) => setTimeout(resolve, 100));
-
+            setOptimisticName(newName);
             // 이름 설정
             setName(newName);
 
-            // 임의로 에러를 발생시키고 싶다면 여기 추가
-            // if (newName === "error") {
-            //     return "An error occurred!";
-            // }
+            try {
+                // 실제 작업 처리 (지연 추가)
+                await new Promise((resolve) => setTimeout(resolve, 2000));
+                setName(newName); // 실제 상태 업데이트
+            } catch (e) {
+                setOptimisticName(name); // 낙관적 상태 롤백
+            }
 
             return null; // 성공
         },
         null
     );
-
     return (
         <div>
-                <form action={submitAction}>
-                    <input type="text" name="name" />
-                    <button type="submit" disabled={isPending}>
-                        Update
-                    </button>
-                    {error && <p>{error}</p>}
-                </form>
+            <form action={submitAction}>
+                <input type="text" name="name" />
+                <button type="submit" disabled={isPending}>
+                    Update
+                </button>
+                {error && <p>{error}</p>}
+            </form>
             {isPending ? (
                 <div>Loading...</div>
             ) : (
-                <div>{name}</div>
-
+                <div>{name || optimisticName.name }</div>
             )}
         </div>
     );
