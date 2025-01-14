@@ -32,16 +32,15 @@ export function ChangeName({ name, setName }) {
     return (
         <div>
             <form action={submitAction}>
-                <input type="text" name="name" />
+                <input type="text" name="name"/>
                 <button type="submit" disabled={isPending}>
                     Update
                 </button>
                 {error && <p>{error}</p>}
             </form>
             {isPending ? (
-                <div>Loading...</div>
-            ) : (
-                <div>{name || optimisticName.name }</div>
+                <div>{optimisticName.name + " (...sending)"}</div>
+            ) : (<>{name}</>
             )}
         </div>
     );
